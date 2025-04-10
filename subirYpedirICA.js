@@ -2,80 +2,85 @@ const admin = require("firebase-admin");
 const axios = require("axios");
 const express = require("express");
 
-// 🔹 Configurar Firebase
+// 🔹 Configuración de Firebase
 const serviceAccount = JSON.parse(process.env.FIREBASE_KEY);
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
 const db = admin.firestore();
 
-// 🔹 Configurar API de AQICN
+// 🔹 Configuración API AQICN
 const API_KEY = process.env.API_KEY;
-const AQI_URL_PANCE = `https://api.waqi.info/feed/@13323/?token=${API_KEY}`;
-const AQI_URL_UNIVALLE = `https://api.waqi.info/feed/@13326/?token=${API_KEY}`;
+const STATIONS = [
+  { id: "@13323", name: "pance" },
+  { id: "@13326", name: "univalle" }
+];
 
-// 🔹 Función para obtener datos del ICA
+// 🔹 Función robusta para actualizar ICA
 async function updateICA() {
   try {
-    const startTime = new Date();
-    console.log(`⏳ Iniciando actualización de ICA a las ${startTime.toLocaleTimeString()}`);
-    
-    // Obtener datos del sensor Pance
-    const responsePance = await axios.get(AQI_URL_PANCE);
-    if (responsePance.data.status === "ok") {
-      const aqiValueP = responsePance.data.data.aqi;
-      const nameStationP = responsePance.data.data.city.name;
-      const latitudeP = responsePance.data.data.city.geo[0];
-      const longitudeP = responsePance.data.data.city.geo[1];
-
-      // Obtener datos del sensor Univalle
-      const responseUnivalle = await axios.get(AQI_URL_UNIVALLE);
-      if (responseUnivalle.data.status === "ok") {
-        const aqiValueU = responseUnivalle.data.data.aqi;
-        const nameStationU = responseUnivalle.data.data.city.name;
-        const latitudeU = responseUnivalle.data.data.city.geo[0];
-        const longitudeU = responseUnivalle.data.data.city.geo[1];
-        
-        console.log(`Nuevo ICA en ${nameStationP}: ${aqiValueP}`);
-        console.log(`Nuevo ICA en ${nameStationU}: ${aqiValueU}`);
-
-        // 🔹 Guardar en Firestore - Pance
-        await db.collection("ICA").doc("pance").set({
-          value: aqiValueP,
-          name: nameStationP,
-          latitude: latitudeP,
-          longitude: longitudeP,
-          timestamp: admin.firestore.FieldValue.serverTimestamp(),
-        }, { merge: true });
-
-        // 🔹 Guardar en Firestore - Univalle
-        await db.collection("ICA").doc("univalle").set({
-          value: aqiValueU,
-          name: nameStationU,
-          latitude: latitudeU,
-          longitude: longitudeU,
-          timestamp: admin.firestore.FieldValue.serverTimestamp(),
-        }, { merge: true });
-
-        const endTime = new Date();
-        const duration = (endTime - startTime) / 1000;
-        console.log(`📌 ICA actualizado en Firestore. Duración: ${duration} segundos`);
-      } else {
-        console.error("❌ Error en la respuesta de la API para Univalle.");
+    const updates = STATIONS.map(async (station) => {
+      try {
+        const response = await axios.get(`https://api.waqi.info/feed/${station.id}/?token=${API_KEY}`);
+        if (response.data.status === "ok") {
+          const { aqi, city } = response.data.data;
+          await db.collection("ICA").doc(station.name).set({
+            value: aqi,
+            name: city.name,
+            latitude: city.geo[0],
+            longitude: city.geo[1],
+            timestamp: admin.firestore.FieldValue.serverTimestamp()
+          }, { merge: true });
+          console.log(`✅ ${station.name.toUpperCase()} actualizado: ICA ${aqi}`);
+          return true;
+        }
+      } catch (error) {
+        console.error(`⚠️ Error en ${station.name}:`, error.message);
+        return false;
       }
-    } else {
-      console.error("❌ Error en la respuesta de la API para Pance.");
-    }
+    });
+
+    await Promise.all(updates);
   } catch (error) {
-    console.error("❌ Error al obtener el ICA:", error);
+    console.error("❌ Error general en updateICA:", error.message);
   }
 }
 
-// 🔹 Configurar intervalo de actualización (15 minutos = 900,000 ms)
-const UPDATE_INTERVAL = 15 * 60 * 1000; // 15 minutos en milisegundos
+// 🔹 Sistema de actualización automática mejorado
+function startAutoUpdate() {
+  // Ejecutar inmediatamente
+  updateICA().catch(console.error);
+  
+  // Programar cada 15 minutos (900,000 ms)
+  const interval = setInterval(() => {
+    console.log("🔄 Iniciando actualización programada...");
+    updateICA().catch(console.error);
+  }, 15 * 60 * 1000);
 
-// Ejecutar inmediatamente y luego cada 15 minutos
-updateICA(); // Primera ejecución inmediata
-const intervalId = setInterval(updateICA, UPDATE_INTERVAL);
+  // Manejar errores inesperados en el intervalo
+  interval.unref(); // Permite que Node.js termine si solo queda este timer activo
 
-console.log(`🔄 Programa iniciado. Actualizando ICA cada 15 minutos...`);
+  // Reintentar si hay fallos (opcional)
+  process.on("unhandledRejection", (err) => {
+    console.error("⚠️ Error no manejado, reintentando...", err);
+    setTimeout(updateICA, 30000); // Reintentar después de 30 segundos
+  });
+}
+
+// 🔹 Servidor Express (siempre activo)
+const app = express();
+app.get("/", (req, res) => res.json({ 
+  status: "ACTIVE",
+  message: "Servidor de ICA funcionando",
+  nextUpdate: new Date(Date.now() + 15 * 60 * 1000).toISOString()
+}));
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`🚀 Servidor listo en puerto ${PORT}`);
+  startAutoUpdate();
+});
+
+// 🔹 Manejar señales para registro (sin detener nada)
+process.on("SIGTERM", () => console.log("📝 Recibida SIGTERM (ignorada)"));
+process.on("SIGINT", () => console.log("📝 Recibida SIGINT (ignorada)"));
