@@ -11,28 +11,30 @@ admin.initializeApp({
 const db = admin.firestore();
 
 // 🔹 Configurar API de AQICN
-const API_KEY = process.env.API_KEY; // Agregar la clave como variable de entorno
-const AQI_URL_PANCE = `https://api.waqi.info/feed/@13323/?token=${API_KEY}`; // pance 
-const AQI_URL_UNIVALLE = `https://api.waqi.info/feed/@13326/?token=${API_KEY}`; // univalle
+const API_KEY = process.env.API_KEY;
+const AQI_URL_PANCE = `https://api.waqi.info/feed/@13323/?token=${API_KEY}`;
+const AQI_URL_UNIVALLE = `https://api.waqi.info/feed/@13326/?token=${API_KEY}`;
 
 // 🔹 Función para obtener datos del ICA
 async function updateICA() {
   try {
+    console.log("⏳ Iniciando actualización de ICA...");
+    
     // Obtener datos del sensor Pance
     const responsePance = await axios.get(AQI_URL_PANCE);
     if (responsePance.data.status === "ok") {
       const aqiValueP = responsePance.data.data.aqi;
-      const nameStationP = responsePance.data.data.city.name; // nombre de la estacion
-      const latitudeP = responsePance.data.data.city.geo[0]; // Latitud
-      const longitudeP = responsePance.data.data.city.geo[1]; // Longitud
+      const nameStationP = responsePance.data.data.city.name;
+      const latitudeP = responsePance.data.data.city.geo[0];
+      const longitudeP = responsePance.data.data.city.geo[1];
 
       // Obtener datos del sensor Univalle
       const responseUnivalle = await axios.get(AQI_URL_UNIVALLE);
       if (responseUnivalle.data.status === "ok") {
         const aqiValueU = responseUnivalle.data.data.aqi;
-        const nameStationU = responseUnivalle.data.data.city.name; // nombre de la estacion
-        const latitudeU = responseUnivalle.data.data.city.geo[0]; // Latitud
-        const longitudeU = responseUnivalle.data.data.city.geo[1]; // Longitud
+        const nameStationU = responseUnivalle.data.data.city.name;
+        const latitudeU = responseUnivalle.data.data.city.geo[0];
+        const longitudeU = responseUnivalle.data.data.city.geo[1];
         
         console.log(`Nuevo ICA en ${nameStationP}: ${aqiValueP}`);
         console.log(`Nuevo ICA en ${nameStationU}: ${aqiValueU}`);
@@ -67,17 +69,20 @@ async function updateICA() {
   }
 }
 
-// Ejecutar inmediatamente al iniciar
-updateICA();
-
-// 🔹 Ejecutar cada 15 minutos
+// 🔹 Configurar el programador cron para ejecutar inmediatamente y luego cada 15 minutos
 cron.schedule("*/15 * * * *", () => {
-  console.log("⏳ Actualizando ICA...");
   updateICA();
+}, {
+  scheduled: true,
+  timezone: "America/Bogota", // Ajusta según tu zona horaria
+  runOnInit: true // Ejecuta inmediatamente al iniciar
 });
 
 // 🔹 Iniciar el servidor (necesario para Render)
 const app = express();
 app.get("/", (req, res) => res.send("Servidor ICA corriendo"));
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Servidor en puerto ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`🚀 Servidor en puerto ${PORT}`);
+  console.log("⏰ Programador cron iniciado. Actualizaciones cada 15 minutos.");
+});
