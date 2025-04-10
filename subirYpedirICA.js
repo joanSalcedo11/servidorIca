@@ -1,6 +1,5 @@
 const admin = require("firebase-admin");
 const axios = require("axios");
-const cron = require("node-cron");
 const express = require("express");
 
 // 🔹 Configurar Firebase
@@ -21,7 +20,6 @@ async function updateICA() {
     const startTime = new Date();
     console.log(`⏳ Iniciando actualización de ICA a las ${startTime.toLocaleTimeString()}`);
     
-    // [El resto de tu función updateICA permanece igual...]
     // Obtener datos del sensor Pance
     const responsePance = await axios.get(AQI_URL_PANCE);
     if (responsePance.data.status === "ok") {
@@ -73,61 +71,11 @@ async function updateICA() {
   }
 }
 
-// 🔹 Configuración mejorada del cron
-function setupCron() {
-  // Ejecutar inmediatamente al iniciar
-  updateICA().catch(console.error);
-  
-  // Programar ejecución cada 15 minutos
-  const task = cron.schedule("*/15 * * * *", () => {
-    console.log('⏰ Disparando tarea programada...');
-    updateICA().catch(console.error);
-  }, {
-    scheduled: true,
-    timezone: "America/Bogota"
-  });
+// 🔹 Configurar intervalo de actualización (15 minutos = 900,000 ms)
+const UPDATE_INTERVAL = 15 * 60 * 1000; // 15 minutos en milisegundos
 
-  return task;
-}
+// Ejecutar inmediatamente y luego cada 15 minutos
+updateICA(); // Primera ejecución inmediata
+const intervalId = setInterval(updateICA, UPDATE_INTERVAL);
 
-// 🔹 Iniciar el servidor
-const app = express();
-app.get("/", (req, res) => res.send("Servidor ICA corriendo"));
-
-// Endpoint para verificar el estado
-app.get("/status", (req, res) => {
-  res.json({
-    status: "running",
-    nextRun: getNextCronRun("*/15 * * * *", "America/Bogota"),
-    lastRun: lastRunTime
-  });
-});
-
-const PORT = process.env.PORT || 3000;
-const server = app.listen(PORT, () => {
-  console.log(`🚀 Servidor en puerto ${PORT}`);
-  const cronTask = setupCron();
-  console.log("⏰ Programador cron iniciado. Actualizaciones cada 15 minutos.");
-});
-
-// Manejar cierre adecuado
-process.on('SIGTERM', () => {
-  console.log('🛑 Recibido SIGTERM. Cerrando servidor...');
-  server.close(() => {
-    console.log('✅ Servidor cerrado');
-    process.exit(0);
-  });
-});
-
-// Variables para seguimiento
-let lastRunTime = null;
-
-// Función para calcular próxima ejecución
-function getNextCronRun(pattern, timezone) {
-  const options = {
-    scheduled: true,
-    timezone: timezone
-  };
-  const nextDates = cron.getNextDates(pattern, 1, options);
-  return nextDates[0];
-}
+console.log(`🔄 Programa iniciado. Actualizando ICA cada 15 minutos...`);
