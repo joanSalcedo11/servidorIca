@@ -51,7 +51,7 @@ function intervaloReal() {
   setInterval(() => {
     updateICA();
     console.log(cantidad);
-    cantidad++;
+    cantidad=cantidad+1;
   }, 60000); // cada 1 minutos
   
 }
