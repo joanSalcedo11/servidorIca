@@ -11,12 +11,12 @@ admin.initializeApp({
 });
 const db = admin.firestore();
 
-// 🔹 Configuración API AQICN
+/*// 🔹 Configuración API AQICN
 const API_KEY = process.env.API_KEY;
 const STATIONS = [
   { id: "@13323", name: "pance" },
   { id: "@13326", name: "univalle" }
-];
+];*/
 
 
 
