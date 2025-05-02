@@ -27,3 +27,11 @@ async function updateICA() {
     console.error("❌ Error general en updateICA:", error.message);
   }
 }
+function intervaloReal() {
+  setInterval(() => {
+    updateICA();
+  }, 900000); // cada 150 minutos
+
+}
+
+module.exports = intervaloReal;
