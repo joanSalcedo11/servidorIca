@@ -71,7 +71,7 @@ app.get("/mensaje", (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Servidor listo en puerto ${PORT}`);
-  startAutoUpdate();
+  //startAutoUpdate();
 });
 
 // 🔹 Manejar señales para registro (sin detener nada)
