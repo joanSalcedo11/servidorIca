@@ -1,3 +1,6 @@
+const admin = require("firebase-admin");
+
+
 // 🔹 Función robusta para actualizar ICA
 const cantidad=1;
 // 🔹 Configuración API AQICN
@@ -7,6 +10,14 @@ const STATIONS = [
   { id: "@13326", name: "univalle" }
 ];
 const axios = require("axios");
+
+// 🔹 Configuración de Firebase
+const serviceAccount = JSON.parse(process.env.FIREBASE_KEY);
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+});
+const db = admin.firestore();
+
 
 async function updateICA() {
   try {
