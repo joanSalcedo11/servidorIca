@@ -2,6 +2,8 @@ const admin = require("firebase-admin");
 const axios = require("axios");
 const express = require("express");
 
+const intervaloReal = require("./intervalo");
+
 // 🔹 Configuración de Firebase
 const serviceAccount = JSON.parse(process.env.FIREBASE_KEY);
 admin.initializeApp({
@@ -19,7 +21,7 @@ const STATIONS = [
 
 
 // 🔹 Sistema de actualización automática mejorado
-function startAutoUpdate() {
+/*function startAutoUpdate() {
   // Ejecutar inmediatamente
   updateICA().catch(console.error);
   
@@ -27,25 +29,44 @@ function startAutoUpdate() {
   const interval = setInterval(() => {
     console.log("🔄 Iniciando actualización programada...");
     updateICA().catch(console.error);
-  }, 15 * 60 * 1000);
+  }, 15 * 60 * 1000);*/
 
-  // Manejar errores inesperados en el intervalo
-  interval.unref(); // Permite que Node.js termine si solo queda este timer activo
-
-  // Reintentar si hay fallos (opcional)
-  process.on("unhandledRejection", (err) => {
-    console.error("⚠️ Error no manejado, reintentando...", err);
-    setTimeout(updateICA, 30000); // Reintentar después de 30 segundos
-  });
-}
 
 // 🔹 Servidor Express (siempre activo)
 const app = express();
-app.get("/", (req, res) => res.json({ 
+  
+app.get("/", (req, res) => {
+  res.send(`
+    <html>
+      <body>
+        <h1 id="mensaje">Cargando...</h1>
+        <script>
+          async function actualizarMensaje() {
+            const res = await fetch('/mensaje');
+            const texto = await res.text();
+            document.getElementById('mensaje').innerText = texto;
+          }
+
+          actualizarMensaje(); // primera carga
+          setInterval(actualizarMensaje, 15000); // actualiza cada 15s
+        </script>
+      </body>
+    </html>
+  `);
+});
+
+app.get("/mensaje", (req, res) => {
+  const mensaje = intervaloReal();
+  res.send(mensaje);
+});
+
+
+  
+/*app.get("/", (req, res) => res.json({ 
   status: "ACTIVE",
   message: "Servidor de ICA funcionando",
   nextUpdate: new Date(Date.now() + 15 * 60 * 1000).toISOString()
-}));
+}));*/
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
@@ -54,5 +75,5 @@ app.listen(PORT, () => {
 });
 
 // 🔹 Manejar señales para registro (sin detener nada)
-process.on("SIGTERM", () => console.log("📝 Recibida SIGTERM (ignorada)"));
-process.on("SIGINT", () => console.log("📝 Recibida SIGINT (ignorada)"));
+/*process.on("SIGTERM", () => console.log("📝 Recibida SIGTERM (ignorada)"));
+process.on("SIGINT", () => console.log("📝 Recibida SIGINT (ignorada)"));*/
