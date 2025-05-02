@@ -33,7 +33,7 @@ async function updateICA() {
 function intervaloReal() {
   setInterval(() => {
     updateICA();
-    consolo.log(cantidad);
+    console.log(cantidad);
     cantidad;
   }, 60000); // cada 1 minutos
   
