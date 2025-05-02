@@ -34,8 +34,8 @@ async function updateICA() {
             timestamp: admin.firestore.FieldValue.serverTimestamp()
           }, { merge: true });
           console.log(`✅ ${station.name.toUpperCase()} actualizado: ICA ${aqi}`);
-          return true;
           cantidad++;
+          return true;
         }
       } catch (error) {
         console.error(`⚠️ Error en ${station.name}:`, error.message);
