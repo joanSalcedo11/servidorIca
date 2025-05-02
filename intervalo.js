@@ -34,7 +34,6 @@ async function updateICA() {
             timestamp: admin.firestore.FieldValue.serverTimestamp()
           }, { merge: true });
           console.log(`✅ ${station.name.toUpperCase()} actualizado: ICA ${aqi}`);
-          cantidad++;
           return true;
         }
       } catch (error) {
@@ -52,7 +51,7 @@ function intervaloReal() {
   setInterval(() => {
     updateICA();
     console.log(cantidad);
-    cantidad;
+    cantidad++;
   }, 60000); // cada 1 minutos
   
 }
