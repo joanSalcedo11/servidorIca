@@ -1,15 +1,15 @@
-const admin = require("firebase-admin");
+//const admin = require("firebase-admin");
 //const axios = require("axios");
 const express = require("express");
 
 const intervaloReal = require("./intervalo");
 
-// 🔹 Configuración de Firebase
+/*// 🔹 Configuración de Firebase
 const serviceAccount = JSON.parse(process.env.FIREBASE_KEY);
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
-const db = admin.firestore();
+const db = admin.firestore();*/
 
 /*// 🔹 Configuración API AQICN
 const API_KEY = process.env.API_KEY;
