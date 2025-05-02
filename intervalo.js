@@ -1,4 +1,6 @@
 // 🔹 Función robusta para actualizar ICA
+const cantidad=1;
+
 async function updateICA() {
   try {
     const updates = STATIONS.map(async (station) => {
@@ -15,6 +17,7 @@ async function updateICA() {
           }, { merge: true });
           console.log(`✅ ${station.name.toUpperCase()} actualizado: ICA ${aqi}`);
           return true;
+          cantidad++;
         }
       } catch (error) {
         console.error(`⚠️ Error en ${station.name}:`, error.message);
