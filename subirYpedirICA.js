@@ -39,7 +39,8 @@ app.get("/", (req, res) => {
   res.send(`
     <html>
       <body>
-        <h1 id="mensaje">Cargando...</h1>
+        <h1 >El servidor esta funcionando</h1>
+        <h3 id="mensaje">hola.... </h3>
         <script>
           async function actualizarMensaje() {
             const res = await fetch('/mensaje');
