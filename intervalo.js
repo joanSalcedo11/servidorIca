@@ -2,7 +2,7 @@ const admin = require("firebase-admin");
 
 
 // 🔹 Función robusta para actualizar ICA
-const cantidad=1;
+let cantidad=1;
 // 🔹 Configuración API AQICN
 const API_KEY = process.env.API_KEY;
 const STATIONS = [
