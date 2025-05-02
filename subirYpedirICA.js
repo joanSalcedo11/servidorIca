@@ -1,5 +1,5 @@
 const admin = require("firebase-admin");
-const axios = require("axios");
+//const axios = require("axios");
 const express = require("express");
 
 const intervaloReal = require("./intervalo");
