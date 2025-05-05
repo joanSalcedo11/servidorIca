@@ -6,8 +6,8 @@ let cantidad=1;
 // 🔹 Configuración API AQICN
 const API_KEY = process.env.API_KEY;
 const STATIONS = [
-  { id: "@13323", name: "pance" },
-  { id: "@13326", name: "univalle" }
+  { id: "@-492664", name: "carrera125" },
+  { id: "@A370834", name: "Parcelaciones Pance" }
 ];
 const axios = require("axios");
 
@@ -31,6 +31,7 @@ async function updateICA() {
             name: city.name,
             latitude: city.geo[0],
             longitude: city.geo[1],
+            takenDate: time.s,
             timestamp: admin.firestore.FieldValue.serverTimestamp()
           }, { merge: true });
           console.log(`✅ ${station.name.toUpperCase()} actualizado: ICA ${aqi}`);
