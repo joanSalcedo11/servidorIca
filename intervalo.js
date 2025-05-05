@@ -6,7 +6,7 @@ let cantidad=1;
 // 🔹 Configuración API AQICN
 const API_KEY = process.env.API_KEY;
 const STATIONS = [
-  { id: "@-492664", name: "carrera125" },
+  { id: "@13323", name: "carrera125" },
   { id: "@A370834", name: "Parcelaciones Pance" }
 ];
 const axios = require("axios");
