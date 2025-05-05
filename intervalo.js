@@ -53,7 +53,7 @@ function intervaloReal() {
     updateICA();
     console.log(cantidad);
     cantidad=cantidad+1;
-    return cantidad;
+    //return cantidad;
   }, 900000); // cada 1 minutos
   
 }
