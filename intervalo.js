@@ -54,7 +54,7 @@ function intervaloReal() {
     console.log(cantidad);
     cantidad=cantidad+1;
     //return cantidad;
-  }, 900000); // cada 1 minutos
+  }, 120000); // cada 2 minutos
   
 }
 
