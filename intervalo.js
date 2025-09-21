@@ -36,6 +36,9 @@ async function updateICA() {
           }, { merge: true });
           console.log(`✅ ${station.name.toUpperCase()} actualizado: ICA ${aqi}`);
           return true;
+        } else {
+          console.log(response.status(500).json({message: "Hubo un error consultando la api de waqi"}));
+          return false;
         }
       } catch (error) {
         console.error(`⚠️ Error en ${station.name}:`, error.message);
@@ -48,6 +51,7 @@ async function updateICA() {
     console.error("❌ Error general en updateICA:", error.message);
   }
 }
+
 function intervaloReal() {
   setInterval(() => {
     updateICA();
