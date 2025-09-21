@@ -4,7 +4,7 @@ Este proyecto implementa un servidor Node.js que consulta periódicamente la API
 
 
 ## Estructura del proyecto
-```json
+```bash
 ├── intervalo.js       # Define la lógica de actualización periódica del ICA
 ├── subirYpedirICA.js  # Inicializa el servidor Express y expone los datos
 ├── package.json
@@ -25,7 +25,7 @@ Este proyecto implementa un servidor Node.js que consulta periódicamente la API
   - Importa la función intervaloReal desde intervalo.js.
   - Inicia un servidor Express en el puerto configurado (PORT, por defecto 3000).
 
-##Rutas:
+## Rutas:
   - / → devuelve un HTML con un script que refresca datos cada 15 segundos.
   - /mensaje → ejecuta intervaloReal() y responde con el valor retornado.
 
