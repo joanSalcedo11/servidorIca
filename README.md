@@ -12,6 +12,7 @@ Este proyecto implementa un servidor Node.js que consulta periódicamente la API
 ````
 
 ## Flujo de ejecución
+
 **1. intervalo.js:**
   - Configura Firebase y la API de WAQI.
   - Define la función asíncrona updateICA() que:
@@ -19,6 +20,7 @@ Este proyecto implementa un servidor Node.js que consulta periódicamente la API
       - Guarda los datos (ICA, ciudad, coordenadas, fecha) en Firestore.
   - Define intervaloReal(), que ejecuta updateICA() automáticamente cada 2 minutos.
   - Exporta intervaloReal para ser usado por otros módulos.
+    
 **2. subirYpedirICA.js**
   - Importa la función intervaloReal desde intervalo.js.
   - Inicia un servidor Express en el puerto configurado (PORT, por defecto 3000).
