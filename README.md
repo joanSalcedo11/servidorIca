@@ -25,8 +25,7 @@ Este proyecto implementa un servidor Node.js que consulta periódicamente la API
   - Importa la función intervaloReal desde intervalo.js.
   - Inicia un servidor Express en el puerto configurado (PORT, por defecto 3000).
 
-**Rutas:**
-
+##Rutas:
   - / → devuelve un HTML con un script que refresca datos cada 15 segundos.
   - /mensaje → ejecuta intervaloReal() y responde con el valor retornado.
 
@@ -45,4 +44,8 @@ Los documentos se guardan en la colección ICA, con esta estructura:
   "timestamp": "2025-09-21T01:23:45.678Z"
 }
 ````
+##Notas
 
+- intervaloReal() ejecuta updateICA() automáticamente cada 2 minutos.
+- El cliente HTML consulta /mensaje cada 15 segundos para refrescar datos.
+- Puedes modificar el tiempo del setInterval en intervalo.js según tus necesidades.
