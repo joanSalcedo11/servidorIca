@@ -2,14 +2,14 @@
 
 Este proyecto implementa un servidor Node.js que consulta periódicamente la API de calidad del aire (WAQI), guarda los resultados en Firebase Firestore y los expone mediante un servidor Express.
 
----
+
 ## Estructura del proyecto
 ├── intervalo.js       # Define la lógica de actualización periódica del ICA
 ├── subirYpedirICA.js  # Inicializa el servidor Express y expone los datos
 ├── package.json
 └── README.md
 
----
+
 ## Flujo de ejecución
 1. intervalo.js:
   - Configura Firebase y la API de WAQI.
@@ -27,7 +27,7 @@ Rutas:
   - /mensaje → ejecuta intervaloReal() y responde con el valor retornado.
 
 
----
+
 ## Datos guardados en Firebase
 
 Los documentos se guardan en la colección ICA, con esta estructura:
