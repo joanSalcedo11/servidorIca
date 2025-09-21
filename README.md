@@ -4,7 +4,7 @@ Este proyecto implementa un servidor Node.js que consulta periódicamente la API
 
 
 ## Estructura del proyecto
-```bash
+```json
 ├── intervalo.js       # Define la lógica de actualización periódica del ICA
 ├── subirYpedirICA.js  # Inicializa el servidor Express y expone los datos
 ├── package.json
@@ -44,7 +44,7 @@ Los documentos se guardan en la colección ICA, con esta estructura:
   "timestamp": "2025-09-21T01:23:45.678Z"
 }
 ````
-##Notas
+## Notas
 
 - intervaloReal() ejecuta updateICA() automáticamente cada 2 minutos.
 - El cliente HTML consulta /mensaje cada 15 segundos para refrescar datos.
