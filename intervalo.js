@@ -3,11 +3,14 @@ const admin = require("firebase-admin");
 
 // 🔹 Función robusta para actualizar ICA
 let cantidad=1;
+let mensaje="";
 // 🔹 Configuración API AQICN
 const API_KEY = process.env.API_KEY;
 const STATIONS = [
   { id: "@-492664", name: "carrera125" },
-  { id: "A370834", name: "Parcelaciones Pance" }
+  { id: "A370834", name: "Parcelaciones Pance" },
+  {id: "A492670", name:"Carrera 5A Norte"},
+  {id: "A363883", name:"Carrera 23"}
 ];
 const axios = require("axios");
 
@@ -23,8 +26,10 @@ async function updateICA() {
   try {
     const updates = STATIONS.map(async (station) => {
       try {
+        mensaje= ("Voy a pedir los datos");
         const response = await axios.get(`https://api.waqi.info/feed/${station.id}/?token=${API_KEY}`);
         if (response.data.status === "ok") {
+          mensaje ="datos pedidos, los voy a guardar";
           const { aqi, city, time } = response.data.data;
           await db.collection("ICA").doc(station.name).set({
             value: aqi,
@@ -35,6 +40,7 @@ async function updateICA() {
             timestamp: admin.firestore.FieldValue.serverTimestamp()
           }, { merge: true });
           console.log(`✅ ${station.name.toUpperCase()} actualizado: ICA ${aqi}`);
+          mensaje ="datos guardados";
           return true;
         } else {
           console.log(response.status(500).json({message: "Hubo un error consultando la api de waqi"}));
