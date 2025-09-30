@@ -62,7 +62,7 @@ async function updateICA() {
 function intervaloReal() {
   setInterval(() => {
     updateICA();
-    console.log(`Se han pedido y guardado ${cantidad} vece(s) los datos de aqi`cantidad);
+    console.log(`Se han pedido y guardado ${cantidad} vece(s) los datos de aqi`);
     cantidad=cantidad+1;
     //return cantidad;
   }, 600000); // cada 10 minutos
