@@ -42,7 +42,7 @@ async function updateICA() {
           }, { merge: true });
           console.log(`✅ ${station.name.toUpperCase()} actualizado: ICA ${aqi}`);
           mensaje ="datos guardados";
-          return true;
+          return response;
         } else {
           console.log(response.status(500).json({message: "Hubo un error consultando la api de waqi"}));
           return false;
@@ -62,7 +62,7 @@ async function updateICA() {
 function intervaloReal() {
   setInterval(() => {
     updateICA();
-    console.log(cantidad);
+    console.log(`Se han pedido y guardado ${cantidad} vece(s) los datos de aqi`cantidad);
     cantidad=cantidad+1;
     //return cantidad;
   }, 600000); // cada 10 minutos
