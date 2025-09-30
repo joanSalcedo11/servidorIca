@@ -13,29 +13,15 @@ app.listen(PORT, () => {
 });
 
 app.get("/", (req, res) => {
+  const data = intervaloReal();
   res.send(`
     <html>
       <body>
         <h1 >El servidor esta funcionando</h1>
-        <h3 id="mensaje">hola.... </h3>
-        <script>
-          async function actualizarMensaje() {
-            const res = await fetch('/mensaje');
-            const texto = await res.text();
-            document.getElementById('mensaje').innerText = texto;
-          }
-
-          actualizarMensaje(); // primera carga
-          setInterval(actualizarMensaje, 15000); // actualiza cada 15s
-        </script>
+        <h3 id="mensaje">${data.data} </h3>
       </body>
     </html>
   `);
-});
-
-app.get("/mensaje", (req, res) => {
-  const mensaje = intervaloReal();
-  res.send(mensaje);
 });
 
 
