@@ -30,7 +30,7 @@ async function updateICA() {
         const response = await axios.get(`https://api.waqi.info/feed/${station.id}/?token=${API_KEY}`);
         if (response.data.status === "ok") {
           mensaje ="datos pedidos, los voy a guardar";
-          console.log(`${mensaje} los cuales son: ${response.data}`);
+          console.log(`${mensaje} los cuales son: ${response.data.data}`);
           const { aqi, city, time } = response.data.data;
           await db.collection("ICA").doc(station.name).set({
             value: aqi,
