@@ -13,7 +13,6 @@ app.listen(PORT, () => {
 });
 
 app.get("/", (req, res) => {
-  req.get(intervaloReal());
   res.send(`
     <html>
       <body>
