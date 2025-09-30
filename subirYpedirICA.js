@@ -13,12 +13,12 @@ app.listen(PORT, () => {
 });
 
 app.get("/", (req, res) => {
-  const data = intervaloReal();
+  const info = intervaloReal();
   res.send(`
     <html>
       <body>
         <h1 >El servidor esta funcionando</h1>
-        <h3 id="mensaje">${data.data} </h3>
+        <h3 id="mensaje">${info} </h3>
       </body>
     </html>
   `);
