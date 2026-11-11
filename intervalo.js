@@ -1,72 +1,183 @@
+
 const admin = require("firebase-admin");
+const axios = require("axios");
 
-
-// 🔹 Función robusta para actualizar ICA
-let cantidad=1;
-let mensaje="";
-// 🔹 Configuración API AQICN
+// Variables de entorno configuradas en Render
 const API_KEY = process.env.API_KEY;
+const FIREBASE_KEY = process.env.FIREBASE_KEY;
+
+// Validación de variables de entorno
+if (!API_KEY || !FIREBASE_KEY) {
+  throw new Error(
+    "Faltan las variables de entorno API_KEY o FIREBASE_KEY."
+  );
+}
+
+// Configuración de Firebase
+let serviceAccount;
+
+try {
+  serviceAccount = JSON.parse(FIREBASE_KEY);
+} catch (error) {
+  throw new Error(
+    `FIREBASE_KEY no contiene un JSON válido: ${error.message}`
+  );
+}
+
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+  });
+}
+
+const db = admin.firestore();
+
+// Configuración de las estaciones
 const STATIONS = [
   { id: "@-492664", name: "carrera125" },
   { id: "A370834", name: "Parcelaciones Pance" },
-  {id: "A492670", name:"Carrera 5A Norte"},
-  {id: "A363883", name:"Carrera 23"}
+  { id: "A492670", name: "Carrera 5A Norte" },
+  { id: "A363883", name: "Carrera 23" },
 ];
-const axios = require("axios");
 
-// 🔹 Configuración de Firebase
-const serviceAccount = JSON.parse(process.env.FIREBASE_KEY);
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-});
-const db = admin.firestore();
+const UPDATE_INTERVAL = 600000; // 10 minutos
 
-
+/**
+ * Consulta los datos ICA de AQICN y los almacena
+ * en la colección ICA de Firebase Firestore.
+ *
+ * @returns {Promise<void>}
+ */
 async function updateICA() {
-  try {
-    const updates = STATIONS.map(async (station) => {
-      try {
-        mensaje= ("Voy a pedir los datos");
-        const response = await axios.get(`https://api.waqi.info/feed/${station.id}/?token=${API_KEY}`);
-        if (response.data.status === "ok") {
-          mensaje ="datos pedidos, los voy a guardar";
-          console.log(`${mensaje} los cuales son: ${response.data.data}`);
-          const { aqi, city, time } = response.data.data;
-          await db.collection("ICA").doc(station.name).set({
-            value: aqi,
-            name: city.name,
-            latitude: city.geo[0],
-            longitude: city.geo[1],
-            takenDate: time.s,
-            timestamp: admin.firestore.FieldValue.serverTimestamp()
-          }, { merge: true });
-          console.log(`✅ ${station.name.toUpperCase()} actualizado: ICA ${aqi}`);
-          mensaje ="datos guardados";
-          return response;
-        } else {
-          console.log(response.status(500).json({message: "Hubo un error consultando la api de waqi"}));
-          return false;
+  console.log("🌍 Iniciando actualización de datos ICA...");
+
+  const updates = STATIONS.map(async (station) => {
+    try {
+      const response = await axios.get(
+        `https://api.waqi.info/feed/${station.id}/`,
+        {
+          params: {
+            token: API_KEY,
+          },
+          timeout: 15000,
         }
-      } catch (error) {
-        console.error(`⚠️ Error en ${station.name}:`, error.message);
+      );
+
+      const payload = response.data;
+
+      // Verificar respuesta de AQICN
+      if (payload?.status !== "ok") {
+        console.error(
+          `❌ Error AQICN en ${station.name}:`,
+          payload?.data
+        );
         return false;
       }
-    });
 
-    await Promise.all(updates);
-  } catch (error) {
-    console.error("❌ Error general en updateICA:", error.message);
-  }
+      const { aqi, city, time } = payload.data;
+
+      // Validar información recibida
+      if (
+        typeof aqi !== "number" ||
+        !Number.isFinite(aqi) ||
+        !city?.name ||
+        !Array.isArray(city.geo) ||
+        city.geo.length < 2 ||
+        !Number.isFinite(Number(city.geo[0])) ||
+        !Number.isFinite(Number(city.geo[1])) ||
+        !time?.s
+      ) {
+        console.warn(
+          `⚠️ Datos incompletos o ICA inválido en ${station.name}`
+        );
+        return false;
+      }
+
+      // Guardar información en Firestore
+      await db.collection("ICA").doc(station.name).set(
+        {
+          value: aqi,
+          name: city.name,
+          latitude: Number(city.geo[0]),
+          longitude: Number(city.geo[1]),
+          takenDate: time.s,
+          timestamp:
+            admin.firestore.FieldValue.serverTimestamp(),
+        },
+        { merge: true }
+      );
+
+      console.log(
+        `✅ ${station.name} actualizado correctamente. ICA: ${aqi}`
+      );
+
+      return true;
+    } catch (error) {
+      console.error(
+        `❌ Error actualizando ${station.name}:`,
+        error.message
+      );
+
+      return false;
+    }
+  });
+
+  // Esperar todas las consultas
+  const results = await Promise.all(updates);
+
+  const successful = results.filter(Boolean).length;
+
+  console.log(
+    `📊 Actualización finalizada: ${successful}/${STATIONS.length} estaciones actualizadas.`
+  );
 }
 
+/**
+ * Inicia la actualización automática del ICA.
+ *
+ * Ejecuta una actualización inmediatamente
+ * y programa nuevas consultas cada 10 minutos.
+ *
+ * Evita que se ejecuten dos actualizaciones
+ * simultáneamente dentro del mismo proceso.
+ *
+ * @returns {NodeJS.Timeout} Identificador del intervalo.
+ */
 function intervaloReal() {
-  setInterval(() => {
-    updateICA();
-    console.log(`Se han pedido y guardado ${cantidad} vece(s) los datos de aqi`);
-    cantidad=cantidad+1;
-    //return cantidad;
-  }, 600000); // cada 10 minutos
-  
+  let updating = false;
+
+  /**
+   * Ejecuta la actualización de forma controlada.
+   *
+   * @returns {Promise<void>}
+   */
+  async function runUpdate() {
+    if (updating) {
+      console.warn(
+        "⚠️ Ya existe una actualización en curso."
+      );
+      return;
+    }
+
+    updating = true;
+
+    try {
+      await updateICA();
+    } catch (error) {
+      console.error(
+        "❌ Error general en la actualización:",
+        error.message
+      );
+    } finally {
+      updating = false;
+    }
+  }
+
+  // Ejecutar inmediatamente
+  void runUpdate();
+
+  // Ejecutar cada 10 minutos
+  return setInterval(runUpdate, UPDATE_INTERVAL);
 }
 
 module.exports = intervaloReal;
