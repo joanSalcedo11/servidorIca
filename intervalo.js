@@ -76,9 +76,8 @@ function parseAQI(value) {
 async function updateStation(station) {
   try {
     const response = await axios.get(
-      `https://api.waqi.info/feed/${station.id}/?token=`,
+      `https://api.waqi.info/feed/${station.id}/?token=${API_KEY}`,
       {
-        params: { token: API_KEY },
         timeout: 15000,
       }
     );
